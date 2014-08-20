@@ -266,6 +266,33 @@ module.exports = function(grunt) {
       }
     },
 
+    uglify: {
+      options: {
+        // jshint camelcase: false
+        mangle: {
+          screw_ie8: true
+        },
+        compress: {
+          screw_ie8: true,
+          sequences: true,
+          properties: true,
+          dead_code: true,
+          drop_debugger: true,
+          comparisons: true,
+          conditionals: true,
+          evaluate: true,
+          booleans: true,
+          loops: true,
+          unused: true,
+          hoist_funs: true,
+          if_return: true,
+          join_vars: true,
+          cascade: true,
+          drop_console: true
+        }
+      }
+    },
+
     ngAnnotate: {
       dist: {
         files: [{
@@ -416,9 +443,30 @@ module.exports = function(grunt) {
         ],
         dest: '.tmp/concat/scripts/templates.js'
       }
+    },
+
+    protractor: {
+      options: {
+        configFile: 'protractor.conf.js'
+      },
+      e2e: {
+        options: {
+          args: {
+            seleniumServerJar: './node_modules/grunt-protractor-runner/node_modules/protractor/selenium/selenium-server-standalone-2.42.2.jar',
+            chromeDriver: './node_modules/grunt-protractor-runner/node_modules/protractor/selenium/chromedriver'
+          }
+        }
+      },
+      saucelabs: {
+        options: {
+          args: {
+            sauceUser: process.env.SAUCE_USERNAME,
+            sauceKey: process.env.SAUCE_ACCESS_KEY
+          }
+        }
+      }
     }
   });
-
 
   grunt.registerTask('serve', function(target) {
     if (target === 'dist') {
@@ -438,14 +486,37 @@ module.exports = function(grunt) {
     ]);
   });
 
-  grunt.registerTask('test', [
-    'clean:server',
-    'ngconstant:dev',
-    'concurrent:test',
-    'autoprefixer',
-    'connect:test',
-    'karma'
-  ]);
+  grunt.registerTask('test', function(target) {
+    var common = [
+      'clean:server',
+      'ngconstant:dev',
+      'concurrent:test',
+      'autoprefixer',
+      'connect:test'
+    ];
+
+    if (target === 'e2e') {
+      return grunt.task.run(common.concat(['protractor:e2e']));
+    }
+    if (target === 'unit') {
+      return grunt.task.run(common.concat(['karma']));
+    }
+
+    if (target === 'travis') {
+      common.push('karma');
+
+      var nonFork = 'eHealthAfrica/sense-ebola-dashboard';
+      if (process.env.TRAVIS_PULL_REQUEST === 'false' ) {
+        if (process.env.TRAVIS_REPO_SLUG === nonFork) {
+          common.push('protractor:saucelabs');
+        }
+      }
+
+      return grunt.task.run(common);
+    }
+
+    grunt.task.run(common.concat(['karma', 'protractor:e2e']));
+  });
 
   grunt.registerTask('build', function(target) {
     var common = [
