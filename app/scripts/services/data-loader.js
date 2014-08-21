@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('sedApp')
-  .service('dataLoader', function dataLoader($rootScope, $q, $timeout, FollowUp, contactFactory, utility) {
+  .service('dataLoader', function dataLoader($rootScope, $q, $timeout, FollowUp, contactFactory, LabResult, utility) {
     var RELOAD_DELAY = 300000;
     var ERROR_RELOAD_DELAY = 1000;
 
@@ -14,7 +14,12 @@ angular.module('sedApp')
     var contacts = [];
     var visitsByDate = [];
     var mergedData = [];
+    var symptomatic = [];
     var mapData = null;
+    var orderedByName = [];
+    var contactData = null;
+    var rawLabData = [];
+    var labData = [];
 
     load();
 
@@ -44,12 +49,32 @@ angular.module('sedApp')
       mergedData: function() {
         return mergedData;
       },
+      symptomatic: function() {
+        return symptomatic;
+      },
       mapData: function() {
         return mapData;
+      },
+      orderedByName : function() {
+          return orderedByName;
+      },
+      contactData: function() {
+        return contactData;
+      },
+      labData: function() {
+        return labData;
       }
     };
 
     function load() {
+
+      if ($rootScope.currentUser === null){
+        loading = false;
+        $rootScope.$emit('endLoad');
+        timeout = $timeout(load, ERROR_RELOAD_DELAY);
+        return;
+      }
+
       if (loading)
         return;
 
@@ -64,7 +89,9 @@ angular.module('sedApp')
       $q.all([
           FollowUp.all(),
           contactFactory.all(),
-          contactFactory.viewByDate()
+          contactFactory.viewByDate(),
+          contactFactory.orderedByName(),
+          LabResult.all()
         ])
         .then(function(response) {
           var updated = false;
@@ -84,10 +111,16 @@ angular.module('sedApp')
             updated = true;
           }
 
+          if (!angular.equals(labData, response[4])) {
+            rawLabData = response[4];
+            updated = true;
+          }
+
           if (updated) {
             console.log('data updated');
             updateMergedData();
-            updateMapData();
+            updateContactData();
+            updateLabData();
             $rootScope.$emit('dataUpdated');
           }
 
@@ -102,7 +135,6 @@ angular.module('sedApp')
           console.log(err);
           error = err;
           $rootScope.$emit('endLoad', err);
-
           timeout = $timeout(load, ERROR_RELOAD_DELAY);
         })
         .finally(function() {
@@ -140,7 +172,7 @@ angular.module('sedApp')
 
       var couchdbData = visitsByDate
         .filter(function(item) {
-          return (item.value.status == 'active' && item.value.doc_type == 'contact');
+          return (item.value.doc_type == 'contact');
         })
         .map(function(senseData) {
           var value = senseData.value;
@@ -177,12 +209,32 @@ angular.module('sedApp')
           if (a.time < b.time) return 1;
           return 0;
         });
+
+      symptomatic = mergedData.filter(function(data) {
+        var symptoms = [
+          'diarrhoea',
+          'pharyngitis',
+          'haemorrhagic',
+          'headache',
+          'maculopapular',
+          'malaise',
+          'musclePain',
+          'vomiting'
+        ];
+
+        var symptomatic = (data.temperature >= 38);
+        var i = 0;
+
+        while (!symptomatic && i < symptoms.length)
+          symptomatic = data[symptoms[i++]];
+
+        return symptomatic;
+      });
     }
 
-    function updateMapData() {
+    function updateContactData() {
       var i, fullName, couchContact,
         couchData = _.where(_.pluck(contacts, 'doc'), {
-          status: 'active',
           doc_type: 'contact'
         });
 
@@ -229,46 +281,76 @@ angular.module('sedApp')
         }
       }
 
-      mapData = parseResponseJsonData(couchData);
+      contactData = parseResponseJsonData(couchData);
     }
+
+    function updateLabData() {
+      labData = rawLabData
+        .map(function(result) {
+          return {
+            name: utility.toTitleCase(result['PatientInformation/surname'] + '  ' + result['PatientInformation/othername']),
+            time: result['_submission_time'],
+            interviewer: utility.toTitleCase(result['WELCOME/DataRecorder']),
+            temperature: result['ClinicalSignsandSymptoms/Temp_reading'],
+            type: result['LabInformation/sampletypes'],
+            collect_date: result['LabInformation/date_specimen_collected'],
+            results_date: result['LabInformation/date_of_results'],
+            results: result['LabInformation/labstatusresults'],
+            status: result['PatientInformation/status_of_patient'],
+            fever: result['ClinicalSignsandSymptoms/AnyFever'] == '1'
+          };
+        });
+    }
+
 
     function parseResponseJsonData(data) {
       var items = [],
-        totalContacts = 0,
         updatedToday = 0,
-        missingContacts = []
+        contactsInfo = [];
 
       data = _.sortBy(data, function(contact) {
         return [contact.Surname, contact.OtherNames].join("_");
       });
+
       // data = _.pluck(data.rows,'doc');
       data.forEach(function(f) {
-        totalContacts++;
+        var currentDate = moment().startOf('day').toDate(),
+          lastDailyVisit = null,
+          visitDate = null,
+          timeDelta = Infinity;
 
         if (f.dailyVisits && f.dailyVisits.length > 0) {
-          var item = {},
-            lastDailyVisit = _.last(_.sortBy(f.dailyVisits, 'dateOfVisit')),
-            currentDate = new Date(),
-            visitDate = new Date(lastDailyVisit.dateOfVisit),
-            updateStatus = 'outdated',
-            timeDelta;
-          // Set the hour, minute and second of the current and visit date to zero before comparing.
-          // That way markers will only turn green if they are from the same day instead of being from in-between 24 h.
-          currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-          visitDate = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate());
+          lastDailyVisit = _.last(_.sortBy(f.dailyVisits, 'dateOfVisit'));
+          visitDate = moment(lastDailyVisit.dateOfVisit).startOf('day').toDate();
           timeDelta = currentDate - visitDate;
-          if (timeDelta >= 172800000) {
+        }
+
+        if (f.status === 'active' || timeDelta < 86400000) {
+          contactsInfo.push({
+            name: utility.toTitleCase(f.Surname + ' ' + f.OtherNames),
+            lastVisit: visitDate,
+            timeDelta: timeDelta,
+            supervisor: f.supervisor || (lastDailyVisit ? lastDailyVisit.interviewer : null)
+          });
+        }
+
+        if (lastDailyVisit) {
+          var item = {},
             updateStatus = 'outdated';
-            missingContacts.push(f.Surname + ', ' + f.OtherNames);
-          }
-          else if (timeDelta >= 86400000) {
-            updateStatus = 'lastTwoDays';
-            missingContacts.push(f.Surname + ', ' + f.OtherNames);
-          }
-          else {
+
+          // take all items with visits today and only active items for older visits.
+          if (timeDelta < 86400000) {
             updateStatus = 'lastDay';
             updatedToday++;
           }
+          else if (f.status === 'active') {
+            if (timeDelta >= 172800000)
+              updateStatus = 'outdated';
+            else
+              updateStatus = 'lastTwoDays';
+          }
+          else
+            return;
 
           if (lastDailyVisit.geoInfo && lastDailyVisit.geoInfo.coords && lastDailyVisit.geoInfo.coords.longitude) {
             item.properties = {
@@ -276,7 +358,7 @@ angular.module('sedApp')
               timestamp: lastDailyVisit.dateOfVisit,
               updateStatus: updateStatus,
               symptomatic: false,
-              temperature: lastDailyVisit.symptoms.temperature,
+              temperature: lastDailyVisit.symptoms.temperature
             };
 
             if (lastDailyVisit.symptoms.temperature > 38 ||
@@ -301,9 +383,6 @@ angular.module('sedApp')
             items.push(item);
           }
         }
-        else {
-          missingContacts.push(f.Surname + ', ' + f.OtherNames);
-        }
       });
 
       // return the FeatureCollection
@@ -313,10 +392,15 @@ angular.module('sedApp')
           features: items
         },
         stats: {
-          total: totalContacts,
-          updated: updatedToday,
-          missing: missingContacts
-        }
+          total: contactsInfo.length,
+          updated: updatedToday
+        },
+        contactsInfo: contactsInfo.sort(function(a, b) {
+          // do not use 'a.timeDelta - b.timeDelta' because timeDelta can be 'Infinity'.
+          if (a.timeDelta < b.timeDelta) return 1;
+          if (a.timeDelta > b.timeDelta) return -1;
+          return 0;
+        })
       };
     }
   });

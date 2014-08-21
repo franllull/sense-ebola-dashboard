@@ -33,6 +33,10 @@ angular
         templateUrl: 'views/follow-ups.html',
         controller: 'FollowUpsCtrl'
       })
+      .when('/not-done', {
+        templateUrl: 'views/not-done.html',
+        controller: 'NotDoneCtrl'
+      })
       .when('/login', {
         templateUrl: 'views/login.html',
         controller: 'LoginCtrl'
@@ -61,15 +65,19 @@ angular
             return config;
           },
           'responseError': function(response) {
-            // switch (response.status) {
-            //     case 401:
-            //         if ($location.path() !== '/login') {
-            //             $location.search('back', $location.path()).path('/login');
-            //         }
-            //         break;
-            // }
+          //    switch (response.status) {
+          //        case 401:
+          //   //         if ($location.path() !== '/login') {
+          //   //             $location.search('back', $location.path()).path('/login');
+          //   //         }
+          //           console.log('encountered 401');
+          //            return;
+          //            break;
+          //        default:
+          //            return $q.reject(response);
+          //  }
 
-            return $q.reject(response);
+          return $q.reject(response);
           }
         };
       }

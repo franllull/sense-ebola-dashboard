@@ -1,8 +1,5 @@
 <div class="panel panel-default">
-  <div class="panel-heading">
-
-    Follow Ups
-  </div>
+  <div class="panel-heading">Symptomatic</div>
   <table ng-show="!dataLoader.initialLoad()" ng-table="locals.tableParams" class="table table-condensed">
      <thead>
        <tr>
@@ -40,22 +37,13 @@
      </tbody>
   </table>
   <div class="panel-footer compact">
-    <!--<button class="btn btn-danger btn-xs pull-right btn-export" type="button"
+    <button class="btn btn-success btn-xs pull-right btn-export" type="button"
             ng-show="!dataLoader.initialLoad()"
             ng-csv="csvData"
             csv-header="csvHeader"
-            ng-click="changeFileName('followups')"
+            ng-click="changeFileName()"
             filename="{{fileName}}.csv">
-      Export Daily Visits Data
-    </button>-->
-
-    <button class="btn btn-success btn-xs pull-right btn-export" type="button"
-            ng-show="!dataLoader.initialLoad()"
-            ng-csv="contactView"
-            csv-header="contactsCSVHeader"
-            ng-click="changeFileName('contacts')"
-            filename="{{contactViewFileName}}.csv">
-      Export Contacts Data
+      Export Data
     </button>
     <pagination class="pagination-sm"
                 ng-model="locals.currentPage"
