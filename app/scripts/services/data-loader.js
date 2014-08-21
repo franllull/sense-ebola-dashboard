@@ -15,6 +15,8 @@ angular.module('sedApp')
     var visitsByDate = [];
     var mergedData = [];
     var symptomatic = [];
+    var mapData = null;
+    var orderedByName = [];
     var contactData = null;
     var rawLabData = [];
     var labData = [];
@@ -50,6 +52,12 @@ angular.module('sedApp')
       symptomatic: function() {
         return symptomatic;
       },
+      mapData: function() {
+        return mapData;
+      },
+      orderedByName : function() {
+          return orderedByName;
+      },
       contactData: function() {
         return contactData;
       },
@@ -82,6 +90,7 @@ angular.module('sedApp')
           FollowUp.all(),
           contactFactory.all(),
           contactFactory.viewByDate(),
+          contactFactory.orderedByName(),
           LabResult.all()
         ])
         .then(function(response) {
