@@ -111,8 +111,8 @@ angular.module('sedApp')
             updated = true;
           }
 
-          if (!angular.equals(labData, response[3])) {
-            rawLabData = response[3];
+          if (!angular.equals(labData, response[4])) {
+            rawLabData = response[4];
             updated = true;
           }
 
@@ -141,26 +141,6 @@ angular.module('sedApp')
           loading = false;
         });
     }
-
-    function updateLabData() {
-      labData = rawLabData
-        .map(function(result) {
-          return {
-            name: utility.toTitleCase(result['PatientInformation/surname'] + '  ' + result['PatientInformation/othername']),
-            time: result['_submission_time'],
-            interviewer: utility.toTitleCase(result['WELCOME/DataRecorder']),
-            temperature: result['ClinicalSignsandSymptoms/Temp_reading'],
-            type: result['LabInformation/sampletypes'],
-            collect_date: result['LabInformation/date_specimen_collected'],
-            results_date: result['LabInformation/date_of_results'],
-            results: result['LabInformation/labstatusresults'],
-            status: result['PatientInformation/status_of_patient'],
-            fever: result['ClinicalSignsandSymptoms/AnyFever'] == '1'
-          };
-        });
-    }
-
-
 
     function updateMergedData() {
       var formHubData = followUps
@@ -303,6 +283,25 @@ angular.module('sedApp')
 
       contactData = parseResponseJsonData(couchData);
     }
+
+    function updateLabData() {
+      labData = rawLabData
+        .map(function(result) {
+          return {
+            name: utility.toTitleCase(result['PatientInformation/surname'] + '  ' + result['PatientInformation/othername']),
+            time: result['_submission_time'],
+            interviewer: utility.toTitleCase(result['WELCOME/DataRecorder']),
+            temperature: result['ClinicalSignsandSymptoms/Temp_reading'],
+            type: result['LabInformation/sampletypes'],
+            collect_date: result['LabInformation/date_specimen_collected'],
+            results_date: result['LabInformation/date_of_results'],
+            results: result['LabInformation/labstatusresults'],
+            status: result['PatientInformation/status_of_patient'],
+            fever: result['ClinicalSignsandSymptoms/AnyFever'] == '1'
+          };
+        });
+    }
+
 
     function parseResponseJsonData(data) {
       var items = [],
