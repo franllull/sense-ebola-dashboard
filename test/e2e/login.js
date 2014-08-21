@@ -8,7 +8,7 @@ describe('SED', function() {
 
   it('should redirect to the login page', function() {
     browser.get('/');
-    var expected = browser.baseUrl + '/#/login?back=';
+    var expected = browser.baseUrl + '/#/login?back=%2F';
     expect(browser.getCurrentUrl()).toEqual(expected);
   });
 
