@@ -32,11 +32,11 @@ describe('SED', function() {
         helpBlocks = username.all(by.css('.help-block'));
       });
 
-      it('should only show help if user has typed', function() {
+      xit('should only show help if user has typed', function() {
         expect(helpBlocks.count()).toBe(0);
       });
 
-      it('should be required', function() {
+      xit('should be required', function() {
         var input = username.element(by.tagName('input'));
         input.sendKeys('test');
         input.clear();
