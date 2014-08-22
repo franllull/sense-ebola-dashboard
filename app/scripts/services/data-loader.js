@@ -116,6 +116,11 @@ angular.module('sedApp')
             updated = true;
           }
 
+          orderedByName = response[3].rows
+            .map(function(contactDetail) {
+              return contactDetail.value;
+            });
+
           if (updated) {
             console.log('data updated');
             updateMergedData();
