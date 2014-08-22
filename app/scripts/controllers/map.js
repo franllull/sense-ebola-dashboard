@@ -1,7 +1,7 @@
 'use strict';
 
 function CommonMapController(focusArea) {
-    return function($rootScope, $scope, $element, dataLoader) {
+    return ['$rootScope', '$scope', '$element', 'dataLoader', function($rootScope, $scope, $element, dataLoader) {
         $scope.title = 'Map';
 
         $scope.initiateMap = function() {
@@ -170,7 +170,7 @@ function CommonMapController(focusArea) {
           getData();
         };
 
-    };
+    }];
 }
 
 angular.module('sedApp').controller('MapCtrl', new CommonMapController());
