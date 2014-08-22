@@ -4,6 +4,7 @@
     <alert class="loader" ng-if="locals.loading" type="info"><img src="../images/preloader.gif" alt="preloader"></alert>
     <alert ng-if="locals.error" type="danger">Error loading data.</alert>
   </div>
+  <div class="panel-content">
   <table ng-show="!locals.loading && !locals.error" ng-table="locals.tableParams"
          class="table table-bordered table-striped table-condensed">
     <tr ng-repeat="item in $data">
@@ -22,6 +23,7 @@
       <td data-title="'Res.'">{{item.results}}</td>
     </tr>
   </table>
+  </div>
   <div class="panel-footer compact">
     <pagination class="pagination-sm"
                 ng-model="locals.currentPage"

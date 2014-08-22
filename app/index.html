@@ -39,9 +39,6 @@
         </li>
       </ul>
 
-      <p ng-if="currentUser && dataLoader.loading()" class="navbar-preloader navbar-right">
-        <img class="preloader preloader-height" src="../images/preloader.gif" alt="preloader">
-      </p>
       <p ng-if="currentUser && !dataLoader.loading()" class="navbar-text navbar-right">
         <span class="navbar-hour" current-time="SETTINGS.timeFormat"></span>
         <br>
@@ -60,6 +57,11 @@
     </div>
   </nav>
   <div ng-show="app.init" class="container-fluid" ng-view></div>
+
+  <p ng-if="currentUser && dataLoader.loading()" class="preloader">
+    <img src="../images/preloader.gif" alt="preloader">
+  </p>
+
   <footer class="footer">
     <div class="container">
       <p class="footnote text-muted text-center">

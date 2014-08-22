@@ -1,8 +1,6 @@
 <div class="panel panel-default">
-  <div class="panel-heading">
-
-    Follow Ups
-  </div>
+  <div class="panel-heading">Follow Ups</div>
+  <div class="panel-content">
   <table ng-show="!dataLoader.initialLoad()" ng-table="locals.tableParams" class="table table-condensed">
      <thead>
        <tr>
@@ -39,6 +37,8 @@
         </tr>
      </tbody>
   </table>
+  </div>
+
   <div class="panel-footer compact">
     <!--<button class="btn btn-danger btn-xs pull-right btn-export" type="button"
             ng-show="!dataLoader.initialLoad()"
