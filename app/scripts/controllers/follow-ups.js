@@ -47,12 +47,12 @@ angular.module('sedApp')
     }
 
     $scope.fileName = getFileName('followups');
-    $scope.contactViewFileName = getFileName('contacts')
+    $scope.contactViewFileName = getFileName('contacts');
     $scope.changeFileName = function(prefix) {
         if(prefix ==="followups") {
             $scope.fileName = getFileName(prefix);
         }else{
-            $scope.contactViewFileName = getFileName(prefix)
+            $scope.contactViewFileName = getFileName(prefix);
         }
     };
 
@@ -70,7 +70,7 @@ angular.module('sedApp')
         counts: [],
         getData: function($defer, params) {
           var data = dataLoader.mergedData();
-          
+
           $scope.contactView = dataLoader.orderedByName();
 
           $scope.csvData = data;

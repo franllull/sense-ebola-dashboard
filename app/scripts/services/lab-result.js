@@ -65,5 +65,5 @@ angular.module('sedApp')
         return d.promise;
       },
       normalize: normalize
-    }
+    };
   });
