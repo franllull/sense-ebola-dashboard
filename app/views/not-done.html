@@ -11,7 +11,7 @@
       </thead>
       <tbody>
       <tr ng-repeat="item in $data"
-          ng-class="{'warning': item.timeDelta >= 172800000, 'success': item.timeDelta < 86400000}">
+          ng-class="{'bg-warning': item.timeDelta >= 172800000, 'bg-success': item.timeDelta < 86400000}">
         <td data-title="'Name'" sortable="'name'">{{item.name}}</td>
         <td data-title="'Last Visit'" sortable="'lastVisit'">
           {{(item.lastVisit | date:SETTINGS.dateFormat) || 'never'}}
