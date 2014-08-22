@@ -19,5 +19,5 @@ angular.module('sedApp')
       all: getAll,
       viewByDate: getViewByDate,
       orderedByName : getContactsViewByNames
-    }
+    };
   });
